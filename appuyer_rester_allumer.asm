@@ -58,11 +58,11 @@ MAINLOOP
     GOTO MAINLOOP   ; on boucle mainloop
 
 PUSHETEIND
-    BCF PORTA,7     ; on éteind la led
+    BCF PORTA,0     ; on éteind la led
     GOTO MAINLOOP   ; on retourne sur mainloop
 
 PUSHALLUME
-    BSF PORTA,7     ; on allume la led
+    BSF PORTA,0     ; on allume la led
     GOTO MAINLOOP   ; on retourne sur mainloop
 
 ETEIND
