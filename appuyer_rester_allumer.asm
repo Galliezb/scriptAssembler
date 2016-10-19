@@ -40,10 +40,10 @@ START
     CLRF STATUS     ; select bank 0
     CLRF PORTA      ; assure que les leds sont éteintes
     MOVLW 0x00      ; préparation init etatled
-    MOVWF etatled,1 ; mets 0000 0000 dans la variable etatled => ETAT LED ETEINTE
+    MOVWF etatled ; mets 0000 0000 dans la variable etatled => ETAT LED ETEINTE
     
 MAINLOOP
-    BTFSC etaled,0  ; Bool == 0 donc on skip pas et on lance la vérification allumage
+    BTFSC etatled,0  ; Bool == 0 donc on skip pas et on lance la vérification allumage
     GOTO $+3        ; avance de 3 lignes
     BTFSS PORTC,3   ; PORTC,3 == 0 la prochaine ligne est lu SINON => NOP ( BOUTON ENFONCE )
     GOTO ALLUME     ; premiere interaction, on allume !
@@ -67,7 +67,7 @@ PUSHALLUME
 
 ETEIND
     BCF PORTA,7     ; on eteind la led 7
-    BCF etatled,0   ; etat variable etaled = 0000 0000 => LED ETEINTE
+    BCF etatled,0   ; etat variable etatled = 0000 0000 => LED ETEINTE
     CALL WAIT       ; on attend que le bouton est relaché - ANTI SPAMMEUR !
     BTFSS PORTC,3   ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
     GOTO $-2        ; recule de 2 lignes
@@ -75,7 +75,7 @@ ETEIND
 
 ALLUME
     BSF PORTA,7     ; on allume la led 7
-    BSF etatled,0   ; etat variable etaled = 0000 0001 => LED ALLUME
+    BSF etatled,0   ; etat variable etatled = 0000 0001 => LED ALLUME
     CALL WAIT       ; on attend que le bouton est relaché - ANTI SPAMMEUR !
     BTFSS PORTC,3   ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
     GOTO $-2        ; recul de 2 lignes
