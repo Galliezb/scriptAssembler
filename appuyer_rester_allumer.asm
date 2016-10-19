@@ -53,11 +53,15 @@ MAINLOOP2
 ETEIND
     BCF PORTA,7 ; on allume la led 7
     CALL INITWAIT ; on attend que le bouton est relaché - ANTI SPAMMEUR !
+    BTFSS PORTC,3 ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
+    GOTO $-2
     GOTO MAINLOOP ; On retourne en position "j'attends qu'on appuye pour allumer"
 
 ALLUME
     BSF PORTA,7 ; on allume la led 7
     CALL INITWAIT ; on attend que le bouton est relaché - ANTI SPAMMEUR !
+    BTFSS PORTC,3 ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
+    GOTO $-2
     GOTO MAINLOOP2 ; On va en boucle 2 attendre qu'on appuye pour étindre !
  
 INITWAIT
