@@ -23,7 +23,7 @@
 ;* Définitions et Variables *
 ;*************************************************************************
     cblock 0x020
-tempo1,tempo2,decla1,switch,estAllume;ici vous pouvez faire vos déclarations de variables
+tempo1,etatled;ici vous pouvez faire vos déclarations de variables
     endc
 
 ;*************************************************************************
@@ -32,45 +32,58 @@ tempo1,tempo2,decla1,switch,estAllume;ici vous pouvez faire vos déclarations de
     ORG 0x000 ; vecteur reset
 
 START
-    BANKSEL TRISA
-    CLRF TRISA ;mettre les leds en input
-    BSF TRISC,3
-    BSF TRISC,2
-    BANKSEL ANSEL
-    CLRF ANSEL ;mettre en numérique
-    CLRF STATUS
-    CLRF PORTA
+    BANKSEL TRISA   ; Selectione la banque ou TRISA se trouve
+    CLRF TRISA      ; mettre le port A en OUTPUT
+    BSF TRISC,3     ; On met le bouton 3 ( celui de gauche ) en INPUT
+    BANKSEL ANSEL   ; select bank 4
+    CLRF ANSEL      ; mettre en numérique
+    CLRF STATUS     ; select bank 0
+    CLRF PORTA      ; assure que les leds sont éteintes
+    MOVLW 0x00      ; préparation init etatled
+    MOVWF etatled,1 ; mets 0000 0000 dans la variable etatled => ETAT LED ETEINTE
+    
 MAINLOOP
-    BTFSS PORTC,3 ; PORTC,3 == 0 la prochaine ligne est lu SINON => NOP ( BOUTON ENFONCE )
-    GOTO ALLUME ; premiere interaction, on allume !
-    GOTO MAINLOOP
- 
-MAINLOOP2
-    BTFSS PORTC,3 ; PORTC,3 == 1 la prochaine ligne est lu SINON => NOP ( BOUTON NON ENFONCE )
-    GOTO ETEIND
-    GOTO MAINLOOP2 ; on boucle et on atteind qu'on appuye pour eteindre
- 
+    BTFSC etaled,0  ; Bool == 0 donc on skip pas et on lance la vérification allumage
+    GOTO $+3        ; avance de 3 lignes
+    BTFSS PORTC,3   ; PORTC,3 == 0 la prochaine ligne est lu SINON => NOP ( BOUTON ENFONCE )
+    GOTO ALLUME     ; premiere interaction, on allume !
+    BTFSS etatled,0 ; Bool == 1 donc on skip pas pour vérifier l'action d'éteindre
+    GOTO $+3        ; avance de 3 lignes
+    BTFSS PORTC,3   ; PORTC,3 == 1 la prochaine ligne est lu SINON => NOP ( BOUTON ENFONCE )
+    GOTO ETEIND     ; se rendre au label eteind
+    BTFSS PORTC,2   ; BOUTON 2 enfoncé, on allume la led !   
+    GOTO PUSHALLUME ; on va allumer la led
+    BTFSC PORTC,2   ; BOUTON 2 relaché, on éteind la led
+    GOTO PUSHETEIND ; On éteind la led
+    GOTO MAINLOOP   ; on boucle mainloop
+
+PUSHETEIND
+    BCF PORTA,7     ; on éteind la led
+    GOTO MAINLOOP   ; on retourne sur mainloop
+
+PUSHALLUME
+    BSF PORTA,7     ; on allume la led
+    GOTO MAINLOOP   ; on retourne sur mainloop
+
 ETEIND
-    BCF PORTA,7 ; on allume la led 7
-    CALL INITWAIT ; on attend que le bouton est relaché - ANTI SPAMMEUR !
-    BTFSS PORTC,3 ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
-    GOTO $-2
-    GOTO MAINLOOP ; On retourne en position "j'attends qu'on appuye pour allumer"
+    BCF PORTA,7     ; on allume la led 7
+    CALL WAIT       ; on attend que le bouton est relaché - ANTI SPAMMEUR !
+    BTFSS PORTC,3   ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
+    GOTO $-2        ; recule de 2 lignes
+    GOTO MAINLOOP   ; On retourne en position "j'attends qu'on appuye pour allumer"
 
 ALLUME
-    BSF PORTA,7 ; on allume la led 7
-    CALL INITWAIT ; on attend que le bouton est relaché - ANTI SPAMMEUR !
-    BTFSS PORTC,3 ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
-    GOTO $-2
-    GOTO MAINLOOP2 ; On va en boucle 2 attendre qu'on appuye pour étindre !
+    BSF PORTA,7     ; on allume la led 7
+    BSF etatled,0   ; etat variable etaled = 0000 0001 => LED ALLUME
+    CALL WAIT       ; on attend que le bouton est relaché - ANTI SPAMMEUR !
+    BTFSS PORTC,3   ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
+    GOTO $-2        ; recul de 2 lignes
+    GOTO MAINLOOP   ; On va en boucle 2 attendre qu'on appuye pour étindre !
  
-INITWAIT
-    MOVLW 0xFF ; stock 1111 1111 dans le registre de travail
-    MOVWF tempo1  ; envoi le W dans la variable tempo1
-    CALL WAIT
-    RETURN
 WAIT
+    MOVLW 0xFF      ; stock 1111 1111 dans le registre de travail
+    MOVWF tempo1    ; envoi le W dans la variable tempo1
     DECFSZ tempo1,1 ; décremente tempo1 et stock dans tempo1, skip la ligne suivante si 0
     GOTO $-1        ; reviens à la ligne précédente, cool non ? Ben ouai c'est trop cool !
-    RETURN          ; Wait va donc attendre 256*2*200ns = 0.1024s
-    END
+    RETURN          ; retourne et continue après le call qui t'as envoyé ici
+    END             ; c'est fini ! on a réussi ! félicitation à toutes et tous !
