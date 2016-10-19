@@ -66,7 +66,8 @@ PUSHALLUME
     GOTO MAINLOOP   ; on retourne sur mainloop
 
 ETEIND
-    BCF PORTA,7     ; on allume la led 7
+    BCF PORTA,7     ; on eteind la led 7
+    BCF etatled,0   ; etat variable etaled = 0000 0000 => LED ETEINTE
     CALL WAIT       ; on attend que le bouton est relaché - ANTI SPAMMEUR !
     BTFSS PORTC,3   ; Si bouton toujours ENFONCE alors on attends encore ! Sinon on skip
     GOTO $-2        ; recule de 2 lignes
